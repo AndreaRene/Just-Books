@@ -22,15 +22,15 @@ const resolvers = {
 
             if (!validUser) {
                 throw new AuthenticationError(
-                    'No user found with this email address'
+                    'Incorrect username or password.'
                 );
-            }
+            };
 
             const validPW = await validUser.isCorrectPassword(password);
 
             if (!validPW) {
-                throw new AuthenticationError('Incorrect credentials');
-            }
+                throw new AuthenticationError('Incorrect username or password.');
+            };
 
             const token = signToken(validUser);
 
@@ -46,5 +46,24 @@ const resolvers = {
 
             return updateUser;
         },
-    }
-}
+        // Delete book from user list
+        deleteBook: async (parent, { bookId }, context) => {
+            if (context.user) {
+                const book = await Book.findOneAndDelete({
+                    _id: bookId,
+                });
+
+                await User.findOneAndUpdate(
+                    { _id: context.user._id },
+                    { $pull: { savedBooks: { bookId: bookId } } },
+                    { new: true }
+                );
+
+                return book;
+            };
+            throw new AuthenticationError('You need to be logged in!');
+        },
+    },
+};
+
+module.exports = resolvers;
