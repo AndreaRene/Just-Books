@@ -4,37 +4,47 @@ const { signToken } = require('../utils/auth');
 
 const resolvers = {
     Query: {
-        // Get user
+        // Get user by username
         me: async (parent, { username }) => {
             return User.findOne({ username }).populate('books');
         },
     },
     Mutation: {
-        // Create user
+        // Create a new user
         createUser: async (parent, { username, email, password }) => {
-            const user = await User.create({ username, email, password });
-            const token = signToken(user);
-            return { token, user };
+            const newUser = await User.create({ username, email, password });
+            const token = signToken(newUser);
+            return { token, newUser };
         },
-        // Create user
+        // User login, token signing
         login: async (parent, { email, password }) => {
-            const user = await User.findOne({ email });
+            const validUser = await User.findOne({ email });
 
-            if (!user) {
+            if (!validUser) {
                 throw new AuthenticationError(
                     'No user found with this email address'
                 );
             }
 
-            const correctPw = await user.isCorrectPassword(password);
+            const validPW = await validUser.isCorrectPassword(password);
 
-            if (!correctPw) {
+            if (!validPW) {
                 throw new AuthenticationError('Incorrect credentials');
             }
 
-            const token = signToken(user);
+            const token = signToken(validUser);
 
-            return { token, user };
+            return { token, validUser };
+        },
+        // Save book to users list
+        saveBook: async (parent, { user, body }) => {
+            const updateUser = await User.findOneAndUpdate(
+                { _id: user._id },
+                { $addToSet: { savedBooks: body } },
+                { new: true, runValidators: true }
+            );
+
+            return updateUser;
         },
     }
 }
