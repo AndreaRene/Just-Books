@@ -3,11 +3,8 @@
   "version": "1.0.0",
   "description": "",
   "main": "server.js",
-  "engines": {
-    "node": "16.x"
-  },
   "scripts": {
-    "start": "node server.js",
+    "start": "react-scripts --openssl-legacy-provider start",
     "watch": "nodemon",
     "seed": "node seeders/seed.js"
   },
